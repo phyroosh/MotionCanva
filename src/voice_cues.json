@@ -1,0 +1,36 @@
+{
+  "voice": "en-US-AvaMultilingualNeural",
+  "total_duration": 21.262,
+  "cues": [
+    {
+      "text": "Not all stress is toxic.",
+      "start": 0.05,
+      "duration": 2.175,
+      "end": 2.225
+    },
+    {
+      "text": "Short bursts of acute stress, called eustress, flood your brain with dopamine and focus, pushing you into peak performance.",
+      "start": 2.225,
+      "duration": 8.05,
+      "end": 10.275
+    },
+    {
+      "text": "The danger is chronic distress: non-stop pressure with zero recovery that spikes cortisol and causes burnout.",
+      "start": 10.275,
+      "duration": 7.025,
+      "end": 17.3
+    },
+    {
+      "text": "Stress isn't your enemy.",
+      "start": 17.3,
+      "duration": 1.9,
+      "end": 19.2
+    },
+    {
+      "text": "Unrecovered stress is.",
+      "start": 19.2,
+      "duration": 2.062,
+      "end": 21.262
+    }
+  ]
+}
