@@ -402,3 +402,83 @@ npm run script -- --topic "<Topic>" --out out/<slug>_script.json
 # 2. Run the Script Hygiene Audit & Linter
 npm run script:lint out/<slug>_script.json
 ```
+---
+
+## 11. 3-Modal Input Architecture & Persistent Topic Queue Flow
+
+MotionCanva agents accept tasks through **three distinct input modalities**:
+1. **Modality A (Direct Script)**: User provides a pre-written narration script.
+2. **Modality B (Direct Topic)**: User provides a conceptual topic (e.g. *"Dopamine Detox"*).
+3. **Modality C (Podcast Link)**: User provides a podcast / video link (e.g. YouTube URL).
+
+---
+
+### Modality C: Podcast Link Ingestion & Topic Distillation
+
+When the user provides a podcast URL:
+1. **Execute Zero-Download Extraction**:
+   Run the podcast processor with automatic queue persistence:
+   ```bash
+   npm run podcast -- --url "<Podcast_URL>"
+   ```
+   - **Tier 1 (Gemini Direct Video Reasoning)**: If `GEMINI_API_KEY` is present, queries Gemini directly with the YouTube URL without downloading media.
+   - **Tier 2 (Zero-Download Timed Transcript & Chapters - Default & Instant)**: Uses `youtube-transcript-api` and `yt-dlp --dump-json --skip-download` to extract title, duration, chapters, and timed transcript in seconds with **zero bytes of video/audio downloaded**.
+   - Distills 4–6 high-impact reel topics and saves them into `data/topics_queue.json` with status `"pending"`.
+
+2. **Present Interactive Selection via `ask_question`**:
+   The agent **MUST** immediately present the extracted topics to the user using the `ask_question` tool:
+   ```json
+   {
+     "questions": [
+       {
+         "question": "I extracted several high-impact reel topics from the podcast. Which topic would you like to produce first?",
+         "options": [
+           "(Recommended) Topic Title 1: Brief hook idea / angle",
+           "Topic Title 2: Brief hook idea / angle",
+           "Topic Title 3: Brief hook idea / angle"
+         ],
+         "is_multi_select": false
+       }
+     ]
+   }
+   ```
+
+3. **Status Tracking & Queue Preservation**:
+   - Once the user selects a topic, mark it completed or in progress:
+     ```bash
+     python3 scripts/topic_queue.py --complete "<Selected_Topic_ID>" --slug "<slug>"
+     ```
+   - **CRITICAL**: The unselected topics remain stored in `data/topics_queue.json` with status `"pending"` so they are preserved across sessions. Never discard unselected topics.
+   - Proceed with full production (Frontier S script $ightarrow$ Edge voiceover $ightarrow$ Motion Canvas scene $ightarrow$ Frontier T thumbnail).
+
+---
+
+### Generating Reels From Stored Queue Backlog
+
+1. **Trigger Phrase Detection**:
+   Whenever the user says:
+   - *"Time for reel generation, show me the stored next topics"*
+   - *"Show me my podcast topics"*
+   - *"What's next in the reel queue?"*
+   - Or simply starts the reel generation process **without** providing a script or topic (e.g. *"Create a reel"*, *"Make a new video"*):
+
+2. **Autonomous Queue Check**:
+   The agent must query the local topic queue:
+   ```bash
+   python3 scripts/topic_queue.py --pending --json
+   ```
+   - **If pending topics exist**: Call `ask_question` displaying the available backlog topics. Only begin generating the reel after the user makes a selection.
+   - **After user selection**: Mark the selected topic as completed in `data/topics_queue.json` and generate the reel.
+   - **If no pending topics exist**: Prompt the user to provide a topic, script, or new podcast link.
+
+---
+
+### Topic Queue CLI Management Commands
+
+| Action | Command |
+| :--- | :--- |
+| **Ingest Podcast & Queue Topics** | `npm run podcast -- --url "<URL>"` |
+| **List All Topics** | `npm run queue` |
+| **Inspect Pending Topics** | `npm run queue:pending` |
+| **Mark Topic Completed** | `python3 scripts/topic_queue.py --complete "<id_or_title>" --slug "<slug>"` |
+| **Add Manual Topic** | `python3 scripts/topic_queue.py --add "<Title>" --tag "{Tag}" --hook "<Hook>"` |

@@ -41,6 +41,13 @@ It integrates:
 - **RightClips Bridge**: Syncs rendered `.mp4`, `.png` thumbnails, and metadata directly to RightClips Studio for automated publishing.
 - **1-Click UI Controls**: Custom `RENDER` and `EXPORT TO RIGHTCLIPS` buttons directly inside the Motion Canvas playback toolbar.
 
+### 5. 3-Modal Input Architecture & Persistent Podcast Queue
+- **3 Input Ways**: Provide a **Script**, a **Topic**, or a **Podcast Link** (YouTube URL).
+- **Zero-Download Podcast Extraction**: Uses direct Gemini video reasoning (Tier 1) or zero-download captions & chapter analysis via `youtube-transcript-api` and `yt-dlp` (Tier 2) with 0 bytes of media downloaded.
+- **Local Persistent Topic Queue**: Automatically saves extracted topics into `data/topics_queue.json`.
+- **Interactive Multi-Choice Selection**: Presents topics via interactive modals (`ask_question`). Selecting one topic marks it completed while preserving all unselected topics for future sessions.
+- **Stored Queue Triggers**: Say *"Time for reel generation, show me the stored next topics"* or start generation without inputs to automatically pull from backlog.
+
 ---
 
 ## 📂 Project Structure
@@ -48,16 +55,20 @@ It integrates:
 ```
 .
 ├── .agents/skills/           # Agent skill definitions & instructions
+├── data/
+│   └── topics_queue.json     # Local persistent backlog of reel topics
 ├── references/               # Design systems, API docs, code recipes
 ├── scripts/
 │   ├── export_to_rightclips.mjs  # Syncs video & metadata to RightClips
 │   ├── generate_metadata.py      # Viral YouTube Shorts metadata generator
 │   ├── generate_voice.py         # Microsoft Edge Neural Voice synthesizer
 │   ├── patch_ui.mjs              # Injects Render & Export buttons into Motion Canvas UI
+│   ├── podcast_processor.py      # Zero-download podcast extractor & topic distiller
 │   ├── publish_youtube.mjs       # Standalone YouTube Data API v3 publisher
 │   ├── script_intelligence.py    # Frontier S Script generator & linter
 │   ├── thumbnail_director.py     # Frontier T Creative Decision Director
 │   ├── thumbnail_renderer.mjs    # 1080x1920 vector thumbnail renderer
+│   ├── topic_queue.py            # Local topic queue manager & status tracker
 │   └── validate_thumbnail.py     # Optical physics contrast validator
 ├── src/
 │   ├── projects/                 # Permanent project storage & metadata
@@ -88,8 +99,8 @@ cd MotionCanva
 # Install Node dependencies
 npm install
 
-# Install Python requirements for voice, metadata & thumbnail audits
-pip install edge-tts numpy pillow
+# Install Python requirements for voice, podcast extraction, and thumbnail audits
+pip install edge-tts numpy pillow youtube-transcript-api yt-dlp
 ```
 
 ---
@@ -100,6 +111,9 @@ pip install edge-tts numpy pillow
 | :--- | :--- |
 | `npm run serve` | Starts Motion Canvas UI at `http://localhost:9000/` with multi-project selector & toolbar buttons |
 | `npm run build` | Compiles project for production distribution |
+| `npm run podcast -- --url "<URL>"` | Extracts high-impact reel topics from a podcast & stores in queue |
+| `npm run queue` | Displays full topic queue status (pending, in-progress, completed) |
+| `npm run queue:pending` | Lists pending uncompleted topics available for reel creation |
 | `npm run script -- --topic "<Topic>"` | Generates a 10/10 veteran script with visual cues & loop syntax |
 | `npm run script:lint <path_to_script>` | Runs the automated Script Hygiene Audit & Linter |
 | `npm run thumbnail:director -- --topic "<Topic>"` | Evaluates thumbnail concepts and outputs director manifest |

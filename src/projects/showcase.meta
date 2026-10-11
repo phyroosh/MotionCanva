@@ -1,6 +1,5 @@
 {
   "version": 0,
-  "name": "showcase",
   "shared": {
     "background": null,
     "range": [
@@ -28,5 +27,6 @@
         "includeAudio": true
       }
     }
-  }
+  },
+  "name": "showcase"
 }
